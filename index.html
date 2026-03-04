@@ -36,6 +36,23 @@
             pointer-events: none;
         }
 
+        /* Затемняющий слой для клика (Overlay) */
+        #menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0);
+            z-index: 90;
+            display: none;
+            cursor: pointer;
+        }
+
+        #menu-overlay.active {
+            display: block;
+        }
+
         .page {
             display: none;
             height: calc(100vh - 180px);
@@ -217,6 +234,9 @@
 </head>
 <body>
 
+    <!-- Затемняющий слой для клика -->
+    <div id="menu-overlay" onclick="closeSidebar()"></div>
+
     <!-- Уведомление -->
     <div id="notification" class="glass-panel p-4 flex items-center gap-4 border-l-4 border-green-500 min-w-[300px]">
         <div class="bg-green-500 rounded-full p-1">
@@ -290,8 +310,8 @@
             <div class="game-scroll-container" id="horizontal-scroller">
                 <!-- Контент из JS -->
             </div>
-            <!-- Секция новостей как на скрине -->
-            <div class="mt-8 grid grid-cols-3 gap-6">
+            <!-- Секция новостей -->
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="glass-panel overflow-hidden">
                     <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1174180/capsule_616x353.jpg" class="w-full h-32 object-cover">
                     <div class="p-3"><p class="text-[10px] text-blue-400 font-bold uppercase">Событие</p><h4 class="text-xs font-bold">Red Dead Online: Moonshiners</h4></div>
@@ -321,7 +341,7 @@
     </div>
 
     <!-- ФУТЕР -->
-    <footer class="fixed bottom-6 left-8 right-8 flex justify-between items-center z-50">
+    <footer class="fixed bottom-6 left-8 right-8 flex justify-between items-center z-[110]">
         <div class="flex gap-4">
             <div class="footer-btn" id="steam-trigger">
                 <span class="btn-icon">S</span> <span class="font-bold tracking-tighter">STEAM</span>
@@ -349,17 +369,21 @@
 
         const sidebar = document.getElementById('steam-sidebar');
         const mainView = document.getElementById('main-view');
+        const overlay = document.getElementById('menu-overlay');
         const trigger = document.getElementById('steam-trigger');
 
         // Открытие/закрытие меню
-        trigger.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = sidebar.classList.toggle('open');
             mainView.classList.toggle('view-blurred');
+            overlay.classList.toggle('active');
         });
 
         function closeSidebar() {
             sidebar.classList.remove('open');
             mainView.classList.remove('view-blurred');
+            overlay.classList.remove('active');
         }
 
         // Навигация из бокового меню
@@ -368,14 +392,15 @@
             closeSidebar();
             // Обновляем активный пункт в сайдбаре
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            if(event && event.currentTarget) event.currentTarget.classList.add('active');
         }
 
         function openPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
+            const page = document.getElementById('page-' + pageId);
             const navLink = document.getElementById('nav-' + pageId);
+            if (page) page.classList.add('active');
             if (navLink) navLink.classList.add('active');
         }
 
@@ -424,13 +449,14 @@
                             <h3 class="font-bold">${g.title}</h3>
                             <span class="text-blue-400 font-bold">${g.owned ? '' : g.price}</span>
                         </div>
-                        ${g.owned ? `<span class="opacity-50 text-xs">УЖЕ ЕСТЬ</span>` : `<button onclick="buyGame(${g.id})" class="buy-btn">КУПИТЬ</button>`}
+                        ${g.owned ? `<span class="opacity-50 text-xs font-bold">В БИБЛИОТЕКЕ</span>` : `<button onclick="buyGame(${g.id}, event)" class="buy-btn">КУПИТЬ</button>`}
                     </div>
                 </div>
             `).join('');
         }
 
-        function buyGame(id) {
+        function buyGame(id, event) {
+            if(event) event.stopPropagation();
             const game = games.find(g => g.id === id);
             if (game) {
                 game.owned = true;
@@ -441,9 +467,12 @@
             }
         }
 
-        // Колесико
+        // Скролл колесиком
         const scroller = document.getElementById('horizontal-scroller');
-        scroller.addEventListener('wheel', (e) => { e.preventDefault(); scroller.scrollLeft += e.deltaY; });
+        scroller.addEventListener('wheel', (e) => { 
+            e.preventDefault(); 
+            scroller.scrollLeft += e.deltaY; 
+        }, { passive: false });
 
         // Часы
         setInterval(() => {
