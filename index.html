@@ -12,6 +12,7 @@
             --steam-blue: #66c0f4;
             --steam-dark: #0b1119;
             --steam-menu: #171d24;
+            --steam-gray: #3d4450;
         }
 
         body {
@@ -20,467 +21,387 @@
             color: #ffffff;
             margin: 0;
             overflow: hidden;
-            background: radial-gradient(circle at top right, #1b2838 0%, #0b1119 70%);
+            background: #0b1119;
             height: 100vh;
             user-select: none;
         }
 
-        /* Основной контейнер страниц */
-        #main-view {
+        /* Анимации переходов */
+        .fade-enter { opacity: 0; transform: scale(1.05); }
+        .fade-active { opacity: 1; transform: scale(1); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Размытие при открытом меню */
+        #app-content {
             transition: filter 0.3s ease, transform 0.3s ease;
+            height: 100vh;
+            width: 100vw;
         }
 
         .view-blurred {
-            filter: blur(10px) brightness(0.5);
+            filter: blur(15px) brightness(0.4);
             transform: scale(0.98);
             pointer-events: none;
         }
 
-        /* Затемняющий слой для клика (Overlay) */
+        /* Overlay */
         #menu-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0);
-            z-index: 90;
-            display: none;
-            cursor: pointer;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 90; display: none;
         }
+        #menu-overlay.active { display: block; }
 
-        #menu-overlay.active {
-            display: block;
-        }
+        /* Страницы */
+        .page { display: none; height: 100%; overflow-y: auto; padding-bottom: 100px; }
+        .page.active { display: block; }
 
-        .page {
-            display: none;
-            height: calc(100vh - 180px);
-            overflow-y: auto;
-            padding-bottom: 50px;
-        }
-
-        .page.active {
-            display: block;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Горизонтальный скролл */
-        .game-scroll-container {
-            display: flex;
-            gap: 24px;
-            overflow-x: auto;
-            padding: 20px 4px 60px 4px;
-            scroll-behavior: smooth;
-        }
-
-        .game-scroll-container::-webkit-scrollbar { display: none; }
-
-        .game-item {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            flex-shrink: 0;
-        }
-
+        /* Плитки игр */
         .game-card {
-            position: relative;
-            border: 3px solid transparent;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 6px;
-            overflow: hidden;
-            background: #121a24;
-        }
-
-        .game-item:hover .game-card {
-            transform: scale(1.05);
-            border-color: #ffffff;
-            box-shadow: 0 0 30px rgba(102, 192, 244, 0.4);
-            z-index: 20;
-        }
-
-        .game-info {
-            margin-top: 15px;
-            opacity: 0;
-            transform: translateY(5px);
-            transition: all 0.3s ease;
-        }
-
-        .game-item:hover .game-info {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Навигация сверху */
-        .nav-link {
-            position: relative;
+            border: 3px solid transparent;
             cursor: pointer;
-            transition: color 0.2s;
-            color: #9ca3af;
+            position: relative;
+        }
+        .game-card:hover {
+            transform: scale(1.05);
+            border-color: #66c0f4;
+            box-shadow: 0 0 20px rgba(102, 192, 244, 0.3);
+            z-index: 10;
         }
 
-        .nav-link.active { color: white; }
-        .nav-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: -6px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: white;
-        }
-
-        /* Боковое меню Steam */
+        /* Боковое меню */
         #steam-sidebar {
             position: fixed;
-            top: 0;
-            left: -300px;
-            width: 280px;
-            height: 100vh;
+            top: 0; left: -300px; width: 280px; height: 100vh;
             background: var(--steam-menu);
             z-index: 100;
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 20px 0 50px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            padding: 40px 0;
         }
+        #steam-sidebar.open { left: 0; }
 
-        #steam-sidebar.open {
-            left: 0;
-        }
-
-        .sidebar-item {
-            padding: 12px 30px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: #9ca3af;
-            cursor: pointer;
+        /* Кнопка играть */
+        .play-btn {
+            background: linear-gradient(to right, #47b000, #83d644);
             transition: all 0.2s;
-            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(71, 176, 0, 0.3);
+        }
+        .play-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .play-btn:active { transform: scale(0.95); }
+
+        /* Стили страницы игры */
+        .game-hero {
+            height: 50vh;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
         }
 
-        .sidebar-item:hover {
-            background: rgba(255,255,255,0.05);
-            color: white;
-        }
-
-        .sidebar-item.active {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border-left: 4px solid var(--steam-blue);
-        }
-
-        /* Прочее */
-        .glass-panel {
-            background: rgba(42, 71, 94, 0.2);
-            backdrop-filter: blur(12px);
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .footer-btn {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 6px 14px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            pointer-events: auto;
-            cursor: pointer;
-        }
-
-        .footer-btn:hover { background: rgba(255, 255, 255, 0.15); }
-
-        .btn-icon {
-            background: #ffffff;
-            color: #000;
-            border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 11px;
-        }
-
-        .buy-btn {
-            background: linear-gradient(to right, #47b000, #3a9100);
-            padding: 6px 16px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        #notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            transform: translateX(200%);
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 200;
-        }
-        #notification.show { transform: translateX(0); }
-
-        .page::-webkit-scrollbar { width: 6px; }
-        .page::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        /* Скроллбар */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        
+        /* Скрытие стандартного скролла для горизонтального списка */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
 
-    <!-- Затемняющий слой для клика -->
     <div id="menu-overlay" onclick="closeSidebar()"></div>
 
-    <!-- Уведомление -->
-    <div id="notification" class="glass-panel p-4 flex items-center gap-4 border-l-4 border-green-500 min-w-[300px]">
-        <div class="bg-green-500 rounded-full p-1">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-        </div>
-        <div>
-            <div class="font-bold text-sm text-white">Успешно!</div>
-            <div class="text-xs text-gray-400">Игра добавлена в библиотеку.</div>
-        </div>
-    </div>
-
-    <!-- БОКОВОЕ МЕНЮ (SIDEBAR) -->
-    <aside id="steam-sidebar">
+    <!-- Боковое меню -->
+    <aside id="steam-sidebar" class="flex flex-col py-10">
         <div class="px-8 mb-10 flex items-center gap-4">
             <div class="w-10 h-10 bg-blue-600 rounded flex items-center justify-center font-bold text-xl">S</div>
-            <div class="font-bold text-lg">Steam</div>
+            <div class="font-bold text-lg tracking-tight">STEAM</div>
         </div>
-        
-        <div class="sidebar-item active" onclick="menuNavigate('home')">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-            Главная
-        </div>
-        <div class="sidebar-item" onclick="menuNavigate('library')">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path></svg>
-            Библиотека
-        </div>
-        <div class="sidebar-item" onclick="menuNavigate('store')">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z"></path></svg>
-            Магазин
-        </div>
-        <div class="sidebar-item">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3.005 3.005 0 013.75-2.906z"></path></svg>
-            Друзья и чат
-        </div>
-        <div class="sidebar-item mt-auto border-t border-white/5">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path></svg>
-            Настройки
-        </div>
-        <div class="sidebar-item text-red-400">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path></svg>
-            Выключение
+        <div class="flex flex-col gap-1">
+            <div class="px-8 py-3 hover:bg-white/5 cursor-pointer flex items-center gap-4 text-gray-400 hover:text-white transition" onclick="closeSidebar(); openPage('main-library')">Главная</div>
+            <div class="px-8 py-3 hover:bg-white/5 cursor-pointer flex items-center gap-4 text-gray-400 hover:text-white transition">Магазин</div>
+            <div class="px-8 py-3 hover:bg-white/5 cursor-pointer flex items-center gap-4 text-gray-400 hover:text-white transition">Друзья</div>
+            <div class="px-8 py-3 hover:bg-white/5 cursor-pointer flex items-center gap-4 text-gray-400 hover:text-white transition">Настройки</div>
         </div>
     </aside>
 
-    <!-- Основной вьюпорт -->
-    <div id="main-view" class="p-6 md:p-10">
-        <!-- Header -->
-        <header class="flex justify-between items-center mb-8">
-            <div class="flex gap-10 items-center">
-                <svg class="w-9 h-9 fill-white opacity-90" viewBox="0 0 24 24"><path d="M12 .5a11.5 11.5 0 0 0-11.5 11.5c0 1.3.2 2.6.7 3.8l5.2-2.1c.1-1.3 1-2.4 2.2-2.8l2-6.5h.4l2 6.5c1.2.4 2.1 1.5 2.2 2.8l5.2 2.1c.5-1.2.7-2.5.7-3.8A11.5 11.5 0 0 0 12 .5z"/></svg>
-                <nav class="flex gap-8 text-gray-400 font-bold uppercase text-[11px] tracking-[0.15em]">
-                    <span onclick="openPage('home')" id="nav-home" class="nav-link active">Главная</span>
-                    <span onclick="openPage('library')" id="nav-library" class="nav-link">Библиотека</span>
-                    <span onclick="openPage('store')" id="nav-store" class="nav-link">Магазин</span>
-                </nav>
+    <div id="app-content">
+        
+        <!-- ГЛАВНАЯ БИБЛИОТЕКА -->
+        <div id="page-main-library" class="page active p-10">
+            <header class="flex justify-between items-center mb-10">
+                <h1 class="text-3xl font-bold tracking-tight">Недавние игры</h1>
+                <div class="flex items-center gap-4">
+                    <div id="clock" class="text-xl font-medium opacity-80 text-white">15:50</div>
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-10 h-10 rounded bg-gray-700">
+                </div>
+            </header>
+
+            <!-- Список с горизонтальной прокруткой -->
+            <div class="flex gap-6 overflow-x-auto pb-10 no-scrollbar scroll-smooth" id="recent-games-list">
+                <!-- Рендерится через JS -->
             </div>
-            
-            <div class="flex items-center gap-5">
-                <div id="clock" class="text-2xl font-light tracking-tight">15:37</div>
-                <div class="w-11 h-11 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 p-[1px]">
-                    <div class="w-full h-full bg-gray-800 rounded-md overflow-hidden">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User">
+
+            <div class="mt-4">
+                <div class="flex gap-6 text-sm font-bold text-gray-400 uppercase tracking-widest border-b border-white/10 pb-4">
+                    <span class="text-white border-b-2 border-white pb-4">Что нового</span>
+                    <span>Друзья</span>
+                    <span>Рекомендации</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+                    <div class="bg-gray-800/40 rounded-lg overflow-hidden border border-white/5">
+                        <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1174180/capsule_616x353.jpg" class="w-full h-32 object-cover">
+                        <div class="p-4"><p class="text-[10px] text-blue-400 font-bold uppercase">Событие</p><h4 class="text-sm font-bold">Moonshiners Update</h4></div>
+                    </div>
+                    <div class="bg-gray-800/40 rounded-lg overflow-hidden border border-white/5">
+                        <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1091500/capsule_616x353.jpg" class="w-full h-32 object-cover">
+                        <div class="p-4"><p class="text-[10px] text-green-400 font-bold uppercase">Новости</p><h4 class="text-sm font-bold">Night City Wire</h4></div>
                     </div>
                 </div>
             </div>
-        </header>
-
-        <!-- СТРАНИЦА: ГЛАВНАЯ -->
-        <div id="page-home" class="page active">
-            <h2 class="text-2xl font-bold mb-2 ml-1 text-gray-200">Недавние игры</h2>
-            <div class="game-scroll-container" id="horizontal-scroller">
-                <!-- Контент из JS -->
-            </div>
-            <!-- Секция новостей -->
-            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass-panel overflow-hidden">
-                    <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1174180/capsule_616x353.jpg" class="w-full h-32 object-cover">
-                    <div class="p-3"><p class="text-[10px] text-blue-400 font-bold uppercase">Событие</p><h4 class="text-xs font-bold">Red Dead Online: Moonshiners</h4></div>
-                </div>
-                <div class="glass-panel overflow-hidden">
-                    <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1091500/capsule_616x353.jpg" class="w-full h-32 object-cover">
-                    <div class="p-3"><p class="text-[10px] text-green-400 font-bold uppercase">Новости</p><h4 class="text-xs font-bold">Cyberpunk 2077: Deep Dive</h4></div>
-                </div>
-                <div class="glass-panel overflow-hidden">
-                    <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1938090/capsule_616x353.jpg" class="w-full h-32 object-cover">
-                    <div class="p-3"><p class="text-[10px] text-yellow-400 font-bold uppercase">Обновление</p><h4 class="text-xs font-bold">Warzone: Season One</h4></div>
-                </div>
-            </div>
         </div>
 
-        <!-- СТРАНИЦА: БИБЛИОТЕКА -->
-        <div id="page-library" class="page">
-            <h2 class="text-2xl font-bold text-gray-200 mb-6">Ваша коллекция</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6" id="library-grid"></div>
-        </div>
+        <!-- ДЕТАЛИ ИГРЫ (Game Details) -->
+        <div id="page-game-details" class="page">
+            <div id="game-hero-bg" class="game-hero">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0b1119] via-transparent to-black/40"></div>
+                <div class="absolute bottom-10 left-12">
+                    <h1 id="detail-title" class="text-6xl font-black italic tracking-tighter mb-4 uppercase">FORZA HORIZON 5</h1>
+                </div>
+            </div>
 
-        <!-- СТРАНИЦА: МАГАЗИН -->
-        <div id="page-store" class="page">
-            <h2 class="text-2xl font-bold mb-6 text-gray-200 text-center uppercase tracking-widest">Магазин Steam</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="store-grid"></div>
+            <div class="px-12 -mt-10 relative z-10">
+                <!-- Панель управления -->
+                <div class="bg-[#1b2838]/80 backdrop-blur-md rounded-lg p-6 flex flex-wrap items-center justify-between border border-white/5 gap-4">
+                    <div class="flex flex-wrap items-center gap-8">
+                        <button onclick="playCurrentGame()" class="play-btn px-16 py-4 rounded font-black text-xl flex items-center gap-3">
+                            <svg class="w-6 h-6 fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            ИГРАТЬ
+                        </button>
+                        <div class="border-l border-white/10 pl-8 space-y-1">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">Последний запуск</p>
+                            <p class="text-sm font-bold">Сегодня</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">Вы играли</p>
+                            <p class="text-sm font-bold"><span id="detail-time">70</span> мин.</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">Достижения</p>
+                            <div class="flex items-center gap-3">
+                                <p class="text-sm font-bold">12/164</p>
+                                <div class="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="w-1/12 h-full bg-blue-400 shadow-[0_0_8px_#66c0f4]"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <button class="w-12 h-12 rounded bg-white/5 flex items-center justify-center hover:bg-white/10 transition">
+                            <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/></svg>
+                        </button>
+                        <button class="w-12 h-12 rounded bg-white/5 flex items-center justify-center hover:bg-white/10 transition">
+                            <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532.947c-.836 1.372.734 2.942 2.106 2.106a1.532.947c.379 1.561 2.6 1.561 2.978 0a1.533.947c1.372.836 2.942-.734 2.106-2.106a1.533.947c1.561-.379 1.561-2.6 0-2.978a1.532.947c.836-1.372-.734-2.942-2.106-2.106a1.532-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Контент игры -->
+                <div class="mt-10">
+                    <div class="flex gap-10 text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 overflow-x-auto no-scrollbar">
+                        <span class="text-white border-b-2 border-white pb-2 flex-shrink-0">Активность</span>
+                        <span class="flex-shrink-0">Личное</span>
+                        <span class="flex-shrink-0">Сообщество</span>
+                        <span class="flex-shrink-0">Об игре</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                        <div class="lg:col-span-2 space-y-6">
+                            <h3 class="text-xl font-bold">Итоги игры</h3>
+                            <div class="bg-white/5 rounded-lg p-6 border border-white/5">
+                                <p class="text-xs text-gray-500 font-bold uppercase mb-4 tracking-tighter">Сегодня</p>
+                                <div class="flex flex-col sm:flex-row gap-6 items-start">
+                                    <img id="detail-achieve-img" src="" class="w-16 h-16 rounded shadow-lg flex-shrink-0">
+                                    <div>
+                                        <h4 class="font-bold">Добро пожаловать в Мексику</h4>
+                                        <p class="text-sm text-gray-400 mt-1">Доберитесь до фестивальной площадки Horizon в Мексике.</p>
+                                        <p class="text-xs text-blue-400 mt-2 font-bold uppercase">Это достижение есть у 93.8% игроков</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-bold">Друзья в игре</h3>
+                            <div class="bg-white/5 rounded-lg p-6 border border-white/5 text-center py-12">
+                                <p class="text-sm text-gray-500">Никто из ваших друзей сейчас не играет в это.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- ФУТЕР -->
-    <footer class="fixed bottom-6 left-8 right-8 flex justify-between items-center z-[110]">
-        <div class="flex gap-4">
-            <div class="footer-btn" id="steam-trigger">
-                <span class="btn-icon">S</span> <span class="font-bold tracking-tighter">STEAM</span>
+    <!-- Футер -->
+    <footer class="fixed bottom-6 left-12 right-12 flex justify-between items-center z-[110] pointer-events-none">
+        <div class="flex gap-4 pointer-events-auto">
+            <div id="steam-trigger" class="bg-white/10 px-4 py-2 rounded flex items-center gap-3 cursor-pointer hover:bg-white/20 transition">
+                <span class="w-5 h-5 bg-white text-black rounded-full flex items-center justify-center font-black text-[10px]">S</span>
+                <span class="font-bold text-xs">МЕНЮ</span>
             </div>
-            <div class="footer-btn opacity-50">МЕНЮ</div>
         </div>
-        <div class="flex gap-3">
-            <div class="footer-btn opacity-50"><span class="btn-icon">≡</span> ОПЦИИ</div>
-            <div class="footer-btn"><span class="btn-icon">A</span> ВЫБРАТЬ</div>
-            <div class="footer-btn" onclick="closeSidebar()"><span class="btn-icon">B</span> НАЗАД</div>
+        <div class="flex gap-4 pointer-events-auto">
+            <div class="hidden sm:flex items-center gap-2 text-[10px] font-bold opacity-80">
+                <span class="w-5 h-5 bg-white text-black rounded-full flex items-center justify-center">A</span> ВЫБРАТЬ
+            </div>
+            <div onclick="goBack()" class="flex items-center gap-2 text-[10px] font-bold opacity-80 cursor-pointer hover:opacity-100">
+                <span class="w-5 h-5 bg-white text-black rounded-full flex items-center justify-center">B</span> НАЗАД
+            </div>
         </div>
     </footer>
 
+    <!-- Оверлей запуска -->
+    <div id="launching-overlay" class="fixed inset-0 z-[200] bg-black flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-1000">
+        <div class="text-center p-4">
+            <div class="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-6 mx-auto"></div>
+            <h2 class="text-2xl sm:text-4xl font-black italic tracking-tighter uppercase" id="launching-title">ЗАПУСК...</h2>
+        </div>
+    </div>
+
     <script>
         const games = [
-            { id: 1, title: "Cyberpunk 2077", price: "1249 ₽", oldPrice: "2499 ₽", owned: false, img: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1091500/capsule_616x353.jpg", wide: true },
-            { id: 2, title: "Elden Ring", price: "3599 ₽", owned: false, img: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1245620/library_600x900.jpg", wide: false },
-            { id: 3, title: "Bouncemasters", price: "0 ₽", owned: true, img: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1283970/capsule_616x353.jpg", wide: true, recent: true },
-            { id: 4, title: "Forza Horizon 5", price: "2999 ₽", owned: true, img: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1551360/library_600x900.jpg", wide: false, recent: true },
-            { id: 5, title: "Counter-Strike 2", price: "Бесплатно", owned: true, img: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/730/library_600x900.jpg", wide: false, recent: true },
-            { id: 6, title: "Grand Theft Auto V", price: "1499 ₽", owned: true, img: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/271590/library_600x900.jpg", wide: false },
-            { id: 7, title: "Red Dead Redemption 2", price: "2499 ₽", owned: true, img: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1174180/library_600x900.jpg", wide: false },
-            { id: 8, title: "Terraria", price: "350 ₽", owned: false, img: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/105600/library_600x900.jpg", wide: false }
+            { 
+                id: 'forza', 
+                title: 'Forza Horizon 5', 
+                time: 70, 
+                img: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1551360/capsule_616x353.jpg',
+                hero: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1551360/library_hero.jpg',
+                wide: true
+            },
+            { 
+                id: 'bounce', 
+                title: 'Bouncemasters', 
+                time: 12, 
+                img: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1283970/capsule_616x353.jpg',
+                hero: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1283970/library_hero.jpg',
+                wide: true
+            },
+            { 
+                id: 'cs2', 
+                title: 'Counter-Strike 2', 
+                time: 1450, 
+                img: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/730/capsule_616x353.jpg',
+                hero: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/730/library_hero.jpg',
+                wide: false
+            },
+            { 
+                id: 'cyberpunk', 
+                title: 'Cyberpunk 2077', 
+                time: 45, 
+                img: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1091500/capsule_616x353.jpg',
+                hero: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1091500/library_hero.jpg',
+                wide: true
+            }
         ];
 
-        const sidebar = document.getElementById('steam-sidebar');
-        const mainView = document.getElementById('main-view');
-        const overlay = document.getElementById('menu-overlay');
-        const trigger = document.getElementById('steam-trigger');
+        let currentGame = null;
 
-        // Открытие/закрытие меню
-        trigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = sidebar.classList.toggle('open');
-            mainView.classList.toggle('view-blurred');
-            overlay.classList.toggle('active');
-        });
-
-        function closeSidebar() {
-            sidebar.classList.remove('open');
-            mainView.classList.remove('view-blurred');
-            overlay.classList.remove('active');
+        function init() {
+            renderRecent();
+            updateClock();
+            setInterval(updateClock, 1000);
+            setupMouseWheel();
         }
 
-        // Навигация из бокового меню
-        function menuNavigate(pageId) {
-            openPage(pageId);
-            closeSidebar();
-            // Обновляем активный пункт в сайдбаре
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-            if(event && event.currentTarget) event.currentTarget.classList.add('active');
+        // Логика прокрутки колесиком для горизонтального списка
+        function setupMouseWheel() {
+            const scroller = document.getElementById('recent-games-list');
+            scroller.addEventListener('wheel', (e) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    scroller.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
+        }
+
+        function renderRecent() {
+            const list = document.getElementById('recent-games-list');
+            list.innerHTML = games.map(game => `
+                <div onclick="openGameDetails('${game.id}')" class="game-card flex-shrink-0 ${game.wide ? 'w-[400px] sm:w-[500px]' : 'w-[200px] sm:w-[250px]'} rounded-md overflow-hidden bg-gray-900 border-2 border-transparent">
+                    <img src="${game.img}" class="w-full h-[200px] sm:h-[280px] object-cover">
+                    <div class="p-4 bg-gradient-to-t from-black to-transparent absolute bottom-0 left-0 right-0">
+                        <h3 class="font-bold text-base sm:text-lg truncate">${game.title}</h3>
+                        <p class="text-[8px] sm:text-[10px] text-blue-400 font-bold uppercase">● Недавно запущено</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openGameDetails(gameId) {
+            const game = games.find(g => g.id === gameId);
+            if(!game) return;
+            currentGame = game;
+
+            document.getElementById('detail-title').textContent = game.title;
+            document.getElementById('detail-time').textContent = game.time;
+            document.getElementById('game-hero-bg').style.backgroundImage = `url(${game.hero})`;
+            document.getElementById('detail-achieve-img').src = game.img;
+
+            openPage('game-details');
         }
 
         function openPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            const page = document.getElementById('page-' + pageId);
-            const navLink = document.getElementById('nav-' + pageId);
-            if (page) page.classList.add('active');
-            if (navLink) navLink.classList.add('active');
+            document.getElementById('page-' + pageId).classList.add('active');
+            document.getElementById('page-' + pageId).scrollTop = 0;
         }
 
-        function updateUI() {
-            renderHome();
-            renderLibrary();
-            renderStore();
-        }
-
-        function renderHome() {
-            const container = document.getElementById('horizontal-scroller');
-            container.innerHTML = games.filter(g => g.recent || g.owned).map(g => `
-                <div class="game-item ${g.wide ? 'min-w-[500px]' : 'min-w-[210px]'}">
-                    <div class="game-card h-[280px] cursor-pointer">
-                        <img src="${g.img}" class="w-full h-full object-cover">
-                    </div>
-                    <div class="game-info">
-                        <h3 class="text-xl font-bold">${g.title}</h3>
-                        <p class="text-xs text-gray-400 uppercase">В вашей библиотеке</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderLibrary() {
-            const grid = document.getElementById('library-grid');
-            grid.innerHTML = games.filter(g => g.owned).map(g => `
-                <div class="game-item group">
-                    <div class="game-card aspect-[2/3] cursor-pointer">
-                        <img src="${g.img}" class="w-full h-full object-cover">
-                    </div>
-                    <h4 class="mt-2 text-sm font-bold truncate">${g.title}</h4>
-                </div>
-            `).join('');
-        }
-
-        function renderStore() {
-            const grid = document.getElementById('store-grid');
-            grid.innerHTML = games.map(g => `
-                <div class="glass-panel overflow-hidden group cursor-pointer flex flex-col">
-                    <div class="h-48 overflow-hidden relative">
-                        <img src="${g.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
-                    </div>
-                    <div class="p-4 flex justify-between items-center mt-auto">
-                        <div>
-                            <h3 class="font-bold">${g.title}</h3>
-                            <span class="text-blue-400 font-bold">${g.owned ? '' : g.price}</span>
-                        </div>
-                        ${g.owned ? `<span class="opacity-50 text-xs font-bold">В БИБЛИОТЕКЕ</span>` : `<button onclick="buyGame(${g.id}, event)" class="buy-btn">КУПИТЬ</button>`}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function buyGame(id, event) {
-            if(event) event.stopPropagation();
-            const game = games.find(g => g.id === id);
-            if (game) {
-                game.owned = true;
-                const n = document.getElementById('notification');
-                n.classList.add('show');
-                setTimeout(() => n.classList.remove('show'), 3000);
-                updateUI();
+        function goBack() {
+            const sidebar = document.getElementById('steam-sidebar');
+            if(sidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openPage('main-library');
             }
         }
 
-        // Скролл колесиком
-        const scroller = document.getElementById('horizontal-scroller');
-        scroller.addEventListener('wheel', (e) => { 
-            e.preventDefault(); 
-            scroller.scrollLeft += e.deltaY; 
-        }, { passive: false });
+        function playCurrentGame() {
+            const overlay = document.getElementById('launching-overlay');
+            const title = document.getElementById('launching-title');
+            title.textContent = `ЗАПУСК ${currentGame.title}...`;
+            
+            overlay.style.opacity = '1';
+            overlay.style.pointerEvents = 'auto';
 
-        // Часы
-        setInterval(() => {
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
+            }, 3000);
+        }
+
+        const trigger = document.getElementById('steam-trigger');
+        const sidebar = document.getElementById('steam-sidebar');
+        const content = document.getElementById('app-content');
+        const overlay = document.getElementById('menu-overlay');
+
+        trigger.onclick = () => {
+            sidebar.classList.add('open');
+            content.classList.add('view-blurred');
+            overlay.classList.add('active');
+        };
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            content.classList.remove('view-blurred');
+            overlay.classList.remove('active');
+        }
+
+        function updateClock() {
             const now = new Date();
             document.getElementById('clock').textContent = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-        }, 1000);
+        }
 
-        updateUI();
+        init();
     </script>
 </body>
 </html>
