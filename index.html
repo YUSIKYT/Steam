@@ -9,9 +9,7 @@
     <style>
         :root {
             --steam-bg: #1b2838;
-            --steam-card: #2a475e;
             --steam-blue: #66c0f4;
-            --steam-gradient: linear-gradient(180deg, rgba(42, 71, 94, 0.6) 0%, rgba(27, 40, 56, 1) 100%);
         }
 
         body {
@@ -20,21 +18,47 @@
             color: #ffffff;
             margin: 0;
             overflow-x: hidden;
-            background: radial-gradient(circle at top right, #1b2838 0%, #0b1119 60%);
+            background: radial-gradient(circle at top right, #1b2838 0%, #0b1119 70%);
             min-height: 100vh;
+            user-select: none;
         }
 
-        /* Эффект свечения для активной игры */
-        .game-card-active {
-            border: 3px solid #ffffff;
-            transform: scale(1.05);
-            box-shadow: 0 0 25px rgba(102, 192, 244, 0.5);
-            z-index: 10;
+        /* Контейнер для карточки и текста под ней */
+        .game-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        /* Эффект увеличения и свечения */
+        .game-card {
+            position: relative;
+            border: 3px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .game-item:hover .game-card {
+            transform: scale(1.03);
+            border-color: #ffffff;
+            box-shadow: 0 0 30px rgba(102, 192, 244, 0.4), 0 0 10px rgba(255, 255, 255, 0.2);
+            z-index: 20;
+        }
+
+        /* Текст под игрой (появляется при наведении) */
+        .game-info {
+            margin-top: 12px;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .game-item:hover .game-info {
+            opacity: 1;
         }
 
         .glass-panel {
-            background: rgba(42, 71, 94, 0.3);
-            backdrop-filter: blur(10px);
+            background: rgba(42, 71, 94, 0.2);
+            backdrop-filter: blur(12px);
             border-radius: 8px;
         }
 
@@ -42,196 +66,184 @@
             display: none;
         }
 
-        .footer-btn {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 4px 12px;
+        /* Иконка управления в углу */
+        .input-hint {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.8);
             border-radius: 4px;
-            font-size: 0.8rem;
+            padding: 2px 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+        }
+
+        .footer-btn {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: background 0.2s;
+        }
+        
+        .footer-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .btn-icon {
             background: #ffffff;
             color: #000;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 12px;
+            font-weight: 800;
+            font-size: 11px;
         }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-6 md:p-10">
 
-    <!-- Верхняя панель -->
-    <header class="flex justify-between items-center mb-8">
-        <div class="flex gap-6 items-center">
-            <svg class="w-8 h-8 fill-white opacity-80" viewBox="0 0 24 24"><path d="M12 .5a11.5 11.5 0 0 0-11.5 11.5c0 1.3.2 2.6.7 3.8l5.2-2.1c.1-1.3 1-2.4 2.2-2.8l2-6.5h.4l2 6.5c1.2.4 2.1 1.5 2.2 2.8l5.2 2.1c.5-1.2.7-2.5.7-3.8A11.5 11.5 0 0 0 12 .5z"/></svg>
-            <div class="flex gap-4 text-gray-400 font-semibold uppercase text-xs tracking-widest">
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-10">
+        <div class="flex gap-8 items-center">
+            <svg class="w-9 h-9 fill-white opacity-90" viewBox="0 0 24 24"><path d="M12 .5a11.5 11.5 0 0 0-11.5 11.5c0 1.3.2 2.6.7 3.8l5.2-2.1c.1-1.3 1-2.4 2.2-2.8l2-6.5h.4l2 6.5c1.2.4 2.1 1.5 2.2 2.8l5.2 2.1c.5-1.2.7-2.5.7-3.8A11.5 11.5 0 0 0 12 .5z"/></svg>
+            <nav class="flex gap-6 text-gray-400 font-bold uppercase text-xs tracking-widest">
                 <span class="text-white border-b-2 border-white pb-1">Недавние игры</span>
                 <span class="hover:text-white cursor-pointer transition">Библиотека</span>
                 <span class="hover:text-white cursor-pointer transition">Магазин</span>
-            </div>
+            </nav>
         </div>
         
-        <div class="flex items-center gap-4">
-            <div class="text-right">
-                <div id="clock" class="text-xl font-light">15:37</div>
-            </div>
-            <div class="w-10 h-10 rounded-sm bg-gray-600 border border-gray-500 overflow-hidden">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User">
+        <div class="flex items-center gap-5">
+            <div id="clock" class="text-2xl font-light tracking-tight">15:37</div>
+            <div class="w-11 h-11 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 p-[1px]">
+                <div class="w-full h-full bg-gray-800 rounded-md overflow-hidden">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User">
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- Основная секция: Недавние игры -->
-    <section>
-        <h2 class="text-xl font-bold mb-4 ml-2">Недавние игры</h2>
+    <!-- Main Content -->
+    <main>
+        <h2 class="text-2xl font-bold mb-6 ml-1 text-gray-200">Недавние игры</h2>
         
-        <div class="flex gap-4 overflow-x-auto pb-8 scroll-hide">
-            <!-- Главная карточка (большая) -->
-            <div class="relative min-w-[500px] h-[280px] rounded-lg overflow-hidden game-card-active transition-all cursor-pointer group">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1283970/capsule_616x353.jpg" class="w-full h-full object-cover" alt="Bouncemasters">
-                <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+        <!-- Game List Horizontal -->
+        <div class="flex gap-6 overflow-x-auto pb-12 pt-2 scroll-hide">
+            
+            <!-- Game 1 (Active by default simulation) -->
+            <div class="game-item min-w-[540px]">
+                <div class="game-card h-[300px] cursor-pointer">
+                    <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1283970/capsule_616x353.jpg" class="w-full h-full object-cover" alt="Bouncemasters">
+                    <div class="input-hint">
+                        <svg class="w-3 h-3 fill-white" viewBox="0 0 24 24"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>
+                        <span class="font-bold">⌨ 🖱</span>
+                    </div>
+                </div>
+                <div class="game-info">
                     <h3 class="text-2xl font-bold">Bouncemasters</h3>
-                    <p class="text-sm text-green-400">● 12 МИН. ЗА ПОСЛЕДНИЕ ДВЕ НЕДЕЛИ</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-green-500 text-xs">▶</span>
+                        <p class="text-sm text-gray-400 font-medium uppercase tracking-tighter">12 МИН. ЗА ПОСЛЕДНИЕ ДВЕ НЕДЕЛИ</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Карточка 2 -->
-            <div class="min-w-[200px] h-[280px] rounded-lg overflow-hidden glass-panel hover:bg-white/10 transition-all cursor-pointer">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1551360/library_600x900.jpg" class="w-full h-full object-cover opacity-80" alt="Forza Horizon 5">
-            </div>
-
-            <!-- Карточка 3 -->
-            <div class="min-w-[200px] h-[280px] rounded-lg overflow-hidden glass-panel hover:bg-white/10 transition-all cursor-pointer">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/730/library_600x900.jpg" class="w-full h-full object-cover opacity-80" alt="CS 2">
-            </div>
-
-            <!-- Карточка 4 -->
-            <div class="min-w-[200px] h-[280px] rounded-lg overflow-hidden glass-panel hover:bg-white/10 transition-all cursor-pointer">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/271590/library_600x900.jpg" class="w-full h-full object-cover opacity-80" alt="GTA V">
-            </div>
-        </div>
-    </section>
-
-    <!-- Вкладки управления -->
-    <div class="flex justify-center gap-4 my-6">
-        <button class="px-6 py-2 rounded-full bg-white/10 font-bold hover:bg-white/20 transition uppercase text-xs">Что нового</button>
-        <button class="px-6 py-2 rounded-full bg-white/10 font-bold hover:bg-white/20 transition uppercase text-xs flex items-center gap-2">Друзья <span class="bg-green-500 w-2 h-2 rounded-full"></span> 1</button>
-        <button class="px-6 py-2 rounded-full bg-white/10 font-bold hover:bg-white/20 transition uppercase text-xs">Рекомендации</button>
-    </div>
-
-    <!-- Нижняя лента событий -->
-    <section class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
-        <!-- Событие 1 -->
-        <div class="glass-panel overflow-hidden flex flex-col group cursor-pointer">
-            <div class="h-32 overflow-hidden">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1174180/ss_6149957245d14457223e75e955d50f8f83049d5a.600x338.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="RDR2">
-            </div>
-            <div class="p-3">
-                <span class="text-[10px] text-gray-400 uppercase font-bold">Внутриигровое событие</span>
-                <h4 class="text-sm font-semibold truncate">Red Dead Online: Moonshiners</h4>
-                <div class="mt-2 flex items-center gap-2">
-                    <span class="bg-green-600 text-[10px] px-1 rounded uppercase">Идет сейчас</span>
-                    <span class="text-[10px] text-gray-400">До 31 марта</span>
+            <!-- Game 2 -->
+            <div class="game-item min-w-[210px]">
+                <div class="game-card h-[300px] cursor-pointer bg-gray-800">
+                    <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1551360/library_600x900.jpg" class="w-full h-full object-cover opacity-90" alt="Forza">
+                </div>
+                <div class="game-info opacity-0 group-hover:opacity-100">
+                    <h3 class="text-lg font-bold truncate">Forza Horizon 5</h3>
+                    <p class="text-[10px] text-gray-500">24 ЧАСА ВСЕГО</p>
                 </div>
             </div>
+
+            <!-- Game 3 -->
+            <div class="game-item min-w-[210px]">
+                <div class="game-card h-[300px] cursor-pointer bg-gray-800">
+                    <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/730/library_600x900.jpg" class="w-full h-full object-cover opacity-90" alt="CS2">
+                </div>
+                <div class="game-info opacity-0">
+                    <h3 class="text-lg font-bold truncate">Counter-Strike 2</h3>
+                    <p class="text-[10px] text-gray-500">НЕДАВНО ЗАПУСКАЛОСЬ</p>
+                </div>
+            </div>
+
+            <!-- Game 4 -->
+            <div class="game-item min-w-[210px]">
+                <div class="game-card h-[300px] cursor-pointer bg-gray-800">
+                    <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/271590/library_600x900.jpg" class="w-full h-full object-cover opacity-90" alt="GTA V">
+                </div>
+                <div class="game-info opacity-0">
+                    <h3 class="text-lg font-bold truncate">Grand Theft Auto V</h3>
+                    <p class="text-[10px] text-gray-500">УСТАНОВЛЕНО</p>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Событие 2 -->
-        <div class="glass-panel overflow-hidden flex flex-col group cursor-pointer">
-            <div class="h-32 overflow-hidden">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/440/ss_8e64629471f654b423193e18a996f019a797457a.600x338.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="World of Tanks">
-            </div>
-            <div class="p-3">
-                <span class="text-[10px] text-gray-400 uppercase font-bold">Внутриигровое событие</span>
-                <h4 class="text-sm font-semibold truncate">Tankfest 2024: New Rewards</h4>
-                <div class="mt-2 flex items-center gap-2">
-                    <span class="bg-green-600 text-[10px] px-1 rounded uppercase">Идет сейчас</span>
-                    <span class="text-[10px] text-gray-400">До 31 марта</span>
-                </div>
-            </div>
+        <!-- Section Tabs -->
+        <div class="flex justify-center gap-3 mt-4">
+            <button class="px-8 py-2.5 rounded-full bg-white/5 font-bold hover:bg-white/10 transition uppercase text-[10px] tracking-widest border border-white/5">Что нового</button>
+            <button class="px-8 py-2.5 rounded-full bg-white/5 font-bold hover:bg-white/10 transition uppercase text-[10px] tracking-widest border border-white/5 flex items-center gap-2">Друзья <span class="bg-green-500 w-2 h-2 rounded-full shadow-[0_0_8px_#22c55e]"></span> 1</button>
+            <button class="px-8 py-2.5 rounded-full bg-white/5 font-bold hover:bg-white/10 transition uppercase text-[10px] tracking-widest border border-white/5">Рекомендации</button>
         </div>
+    </main>
 
-        <!-- Новость 1 -->
-        <div class="glass-panel overflow-hidden flex flex-col group cursor-pointer">
-            <div class="h-32 overflow-hidden relative">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/105600/ss_164b8d7831d102c98d6c17f48e24c5539d0d62c3.600x338.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="Terraria">
-                <div class="absolute inset-0 flex items-center justify-center bg-black/40">
-                    <span class="text-xl font-black tracking-tighter">DEEP DIVE</span>
-                </div>
+    <!-- Footer Controls -->
+    <footer class="fixed bottom-6 left-8 right-8 flex justify-between items-center opacity-80 pointer-events-none">
+        <div class="flex gap-4 pointer-events-auto">
+            <div class="footer-btn cursor-pointer">
+                <span class="btn-icon">S</span> <span class="font-bold tracking-tighter">STEAM</span>
             </div>
-            <div class="p-3">
-                <span class="text-[10px] text-gray-400 uppercase font-bold">Новость</span>
-                <h4 class="text-sm font-semibold truncate">Grimoire Update: Prototype Deep</h4>
-                <div class="mt-2">
-                    <span class="text-[10px] text-gray-400">Опубликовано 4 марта</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Новость 2 -->
-        <div class="glass-panel overflow-hidden flex flex-col group cursor-pointer">
-            <div class="h-32 overflow-hidden">
-                <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1938090/ss_2e17637894a47514f77c08b28f8f906413289069.600x338.jpg" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="Warzone">
-            </div>
-            <div class="p-3">
-                <span class="text-[10px] text-gray-400 uppercase font-bold">Новость</span>
-                <h4 class="text-sm font-semibold truncate">Announcing Black Ops Royale</h4>
-                <div class="mt-2">
-                    <span class="text-[10px] text-gray-400">Опубликовано 3 марта</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Футер с подсказками кнопок -->
-    <footer class="fixed bottom-4 left-4 right-4 flex justify-between items-center opacity-70">
-        <div class="flex gap-4">
-            <div class="footer-btn">
-                <span class="btn-icon">S</span> STEAM
-            </div>
-            <div class="footer-btn">
+            <div class="footer-btn cursor-pointer">
                 МЕНЮ
             </div>
         </div>
-        <div class="flex gap-4">
-            <div class="footer-btn">
+        <div class="flex gap-3 pointer-events-auto">
+            <div class="footer-btn cursor-pointer">
                 <span class="btn-icon">≡</span> ОПЦИИ
             </div>
-            <div class="footer-btn">
+            <div class="footer-btn cursor-pointer">
                 <span class="btn-icon">A</span> ВЫБРАТЬ
             </div>
-            <div class="footer-btn">
+            <div class="footer-btn cursor-pointer">
                 <span class="btn-icon">B</span> НАЗАД
             </div>
         </div>
     </footer>
 
     <script>
-        // Обновление времени
+        // Clock Update
         function updateClock() {
             const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('clock').textContent = `${hours}:${minutes}`;
+            document.getElementById('clock').textContent = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
         }
         setInterval(updateClock, 1000);
         updateClock();
 
-        // Простая интерактивность карточек
-        const cards = document.querySelectorAll('.glass-panel, .game-card-active');
-        cards.forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                // В реальном приложении здесь бы менялся фон страницы на арт игры
+        // Handle focus/hover info visibility
+        const gameItems = document.querySelectorAll('.game-item');
+        gameItems.forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                // Hide all other infos and show current
+                gameItems.forEach(i => i.querySelector('.game-info').style.opacity = '0');
+                item.querySelector('.game-info').style.opacity = '1';
             });
         });
+        
+        // Default: first item is active
+        gameItems[0].querySelector('.game-info').style.opacity = '1';
     </script>
 </body>
 </html>
